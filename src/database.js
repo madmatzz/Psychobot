@@ -7,7 +7,18 @@ let db;
 
 async function initializeDatabase() {
     try {
-        client = new MongoClient(mongoUri);
+        // Check if MongoDB URI is configured
+        if (!process.env.MONGODB_URI) {
+            logger.warn('MONGODB_URI not set, using default local connection');
+        }
+
+        client = new MongoClient(mongoUri, {
+            connectTimeoutMS: 5000,
+            socketTimeoutMS: 30000,
+            retryWrites: true,
+            retryReads: true
+        });
+
         await client.connect();
         db = client.db();
         
@@ -16,14 +27,31 @@ async function initializeDatabase() {
         await db.collection('conversations').createIndex({ timestamp: 1 });
         
         logger.info('MongoDB database initialized successfully');
+
+        // Handle connection errors
+        client.on('error', (error) => {
+            logger.error('MongoDB connection error:', error);
+        });
+
+        client.on('close', () => {
+            logger.warn('MongoDB connection closed');
+        });
+
     } catch (error) {
         logger.error('Failed to initialize MongoDB:', error);
-        throw error;
+        // Don't throw error, let the app continue without DB
+        return false;
     }
+    return true;
 }
 
 async function getConversationHistory(userId, limit = 5) {
     try {
+        if (!db) {
+            logger.warn('Database not initialized, returning empty history');
+            return [];
+        }
+
         const conversations = await db.collection('conversations')
             .find({ user_id: userId })
             .sort({ timestamp: -1 })
@@ -36,12 +64,17 @@ async function getConversationHistory(userId, limit = 5) {
         }));
     } catch (error) {
         logger.error('Error getting conversation history:', error);
-        throw error;
+        return [];
     }
 }
 
 async function saveConversation(userId, messages) {
     try {
+        if (!db) {
+            logger.warn('Database not initialized, skipping conversation save');
+            return;
+        }
+
         const timestamp = new Date();
         const operations = messages.map(msg => ({
             user_id: userId,
@@ -53,7 +86,6 @@ async function saveConversation(userId, messages) {
         await db.collection('conversations').insertMany(operations);
     } catch (error) {
         logger.error('Error saving conversation:', error);
-        throw error;
     }
 }
 
