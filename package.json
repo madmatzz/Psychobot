@@ -1,0 +1,23 @@
+{
+  "name": "psybot",
+  "version": "1.0.0",
+  "description": "A therapeutic Telegram chatbot powered by GPT-4",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "dependencies": {
+    "telegraf": "^4.15.3",
+    "openai": "^4.28.0",
+    "dotenv": "^16.4.1",
+    "mongodb": "^6.3.0",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 

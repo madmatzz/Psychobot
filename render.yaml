@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: psybot
+    env: node
+    region: frankfurt  # You can change this to your preferred region
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TELEGRAM_BOT_TOKEN
+        sync: false  # Indicates this is a secret that needs to be set manually
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: LOG_LEVEL
+        value: info 
